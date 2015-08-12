@@ -73,7 +73,7 @@ begin
   @user = options[:user]
   @password = options[:password]
   @reliable = true
-  @clientid = "fedora_stomper"
+  @clientid = "great_courses_stomper"
   @destination = options[:destination]
 
 
@@ -82,7 +82,9 @@ begin
   $stderr.print "Getting output from #{@destination}\n"
   
   @conn.subscribe(@destination, {"activemq.subscriptionName" => @clientid, :ack =>"client" })
+
   while true
+      begin
       @msg = @conn.receive
       pid = @msg.headers["pid"]
       method = @msg.headers["methodName"]
@@ -96,9 +98,23 @@ begin
       else
         $stderr.puts "Unknown Method: #{method}"
       end
+      rescue NoMethodError
+        puts "No Method Error"
+        next
+      rescue ActiveFedora::ObjectNotFoundError
+          @conn.ack @msg.headers["message-id"]
+          @conn.publish "/topic/post.index.update", @msg.body, @msg.headers
+        rescue Stomp::Error::MessageIDRequiredError
+          next
+        end
       puts  "updated solr index for #{@msg.headers["pid"]}\n"
-      @conn.ack @msg.headers["message-id"]
+      begin
+        @conn.ack @msg.headers["message-id"]
+      rescue Stomp::Error::MessageIDRequiredError
+        next
+      end
   end
+
   @conn.join
 
 rescue Exception => e

@@ -52,7 +52,8 @@ end
 options = {
   :multiple=>false,
   :dir_mode=>:normal,
-  :dir=>'/tmp',
+  :dir=>'/home/hydradm/tufts-great-courses/log',
+  :log_output => true,
   :backtrace=>true
 }
 argv_array = []
