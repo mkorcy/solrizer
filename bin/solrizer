@@ -115,10 +115,6 @@ begin
     end # end unless @msg.nil?
 
     # debug information we find useful in logging
-    @finish_time = Time.now
-    elapsed = (@finish_time - @start_time).to_i / 60
-    $stderr.print "Elapsed time : #{elapsed}"
-
   end #end while true
 
   @conn.join
