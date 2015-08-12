@@ -82,24 +82,45 @@ begin
   $stderr.print "Getting output from #{@destination}\n"
   
   @conn.subscribe(@destination, {"activemq.subscriptionName" => @clientid, :ack =>"client" })
-  while true
-      @msg = @conn.receive
+   while true
+    @msg = @conn.receive
+    unless @msg.nil?
       pid = @msg.headers["pid"]
       method = @msg.headers["methodName"]
-
       puts @msg.headers.inspect
       puts "\nPID: #{@msg.headers["pid"]}\n"
-      if ["addDatastream", "addRelationship","ingest","modifyDatastreamByValue","modifyDatastreamByReference","modifyObject","purgeDatastream","purgeRelationship"].include? method
-        solrizer = Solrizer::Fedora::Solrizer.new
-        solrizer.solrize @msg.headers["pid"]
-      elsif method == "purgeObject"
-        ActiveFedora::SolrService.instance.conn.delete_by_id(pid)
-      else
-        $stderr.puts "Unknown Method: #{method}"
-      end
-      puts  "updated solr index for #{@msg.headers["pid"]}\n"
-      @conn.ack @msg.headers["message-id"]
-  end
+      begin
+        if ["addDatastream", "addRelationship","ingest","modifyDatastreamByValue","modifyDatastreamByReference","modifyObject","purgeDatastream","purgeRelationship"].include? method
+          ActiveFedora::Base.find(@msg.headers["pid"], cast: true).update_index
+        elsif method == "purgeObject"
+          ActiveFedora::SolrService.instance.conn.delete_by_id(pid)
+        else
+          $stderr.puts "Unknown Method: #{method}"
+        end
+
+        rescue ActiveFedora::ObjectNotFoundError
+          @conn.ack @msg.headers["message-id"]
+          @conn.publish "/topic/post.index.update", @msg.body, @msg.headers
+        rescue Stomp::Error::MessageIDRequiredError
+          next
+        end
+
+        puts  "updated solr index for #{@msg.headers["pid"]}\n"
+        begin
+          @conn.ack @msg.headers["message-id"]
+          # once a message has been ack'd rerack it
+        rescue Stomp::Error::MessageIDRequiredError
+          next
+        end
+    end # end unless @msg.nil?
+
+    # debug information we find useful in logging
+    @finish_time = Time.now
+    elapsed = (@finish_time - @start_time).to_i / 60
+    $stderr.print "Elapsed time : #{elapsed}"
+
+  end #end while true
+
   @conn.join
 
 rescue Exception => e
