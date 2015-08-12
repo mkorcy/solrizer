@@ -77,7 +77,7 @@ begin
   @destination = options[:destination]
 
 
-  $stderr.print "Connecting to stomp://#{@host}:#{@port} as #{@user}\n"
+  $stderr.print "Connecting to stomp://#{@host}:#{@port} as #{@user} with Client ID : #{@clientid}\n"
   @conn = Stomp::Connection.open(@user, @password, @host, @port, @reliable, 5, {"client-id" => @clientid} )
   $stderr.print "Getting output from #{@destination}\n"
   
