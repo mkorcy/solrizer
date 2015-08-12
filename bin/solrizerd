@@ -52,7 +52,8 @@ end
 options = {
   :multiple=>false,
   :dir_mode=>:normal,
-  :dir=>'/tmp',
+  :dir=>'/home/hydradm/south_asian_digital_library/log',
+  :log_output => true,
   :backtrace=>true
 }
 argv_array = []
