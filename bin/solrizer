@@ -101,6 +101,9 @@ begin
       rescue NoMethodError
         puts "No Method Error"
         next
+      rescue Rubydora::FedoraInvalidRequest
+        puts "Invalid Fedora Request"
+        next
       rescue ActiveFedora::ObjectNotFoundError
           @conn.ack @msg.headers["message-id"]
           @conn.publish "/topic/post.index.update", @msg.body, @msg.headers
