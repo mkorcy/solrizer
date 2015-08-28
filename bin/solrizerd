@@ -52,7 +52,7 @@ end
 options = {
   :multiple=>false,
   :dir_mode=>:normal,
-  :dir=>'/home/hydradm/tufts-elections/log',
+  :dir=>'/home/hydradm/tufts-election/log',
   :log_output => true,
   :backtrace=>true
 }
