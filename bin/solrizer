@@ -85,19 +85,19 @@ begin
 
   while true
       begin
-        @msg = @conn.receive
-        pid = @msg.headers["pid"]
-        method = @msg.headers["methodName"]
+      @msg = @conn.receive
+      pid = @msg.headers["pid"]
+      method = @msg.headers["methodName"]
 
-        puts @msg.headers.inspect
-        puts "\nPID: #{@msg.headers["pid"]}\n"
-        if ["addDatastream", "addRelationship","ingest","modifyDatastreamByValue","modifyDatastreamByReference","modifyObject","purgeDatastream","purgeRelationship"].include? method
-          ActiveFedora::Base.find(@msg.headers["pid"], cast: true).update_index
-        elsif method == "purgeObject"
-          ActiveFedora::SolrService.instance.conn.delete_by_id(pid)
-        else
-          $stderr.puts "Unknown Method: #{method}"
-        end
+      puts @msg.headers.inspect
+      puts "\nPID: #{@msg.headers["pid"]}\n"
+      if ["addDatastream", "addRelationship","ingest","modifyDatastreamByValue","modifyDatastreamByReference","modifyObject","purgeDatastream","purgeRelationship"].include? method
+        ActiveFedora::Base.find(@msg.headers["pid"], cast: true).update_index
+      elsif method == "purgeObject"
+        ActiveFedora::SolrService.instance.conn.delete_by_id(pid)
+      else
+        $stderr.puts "Unknown Method: #{method}"
+      end
       rescue NoMethodError
         puts "No Method Error"
         next
@@ -105,19 +105,15 @@ begin
         puts "Invalid Fedora Request"
         next
       rescue ActiveFedora::ObjectNotFoundError
-        puts "Object Not Found Error"
-        next
-      rescue Stomp::Error::MessageIDRequiredError
-        puts "Message ID Required Error"
-        next
-      end
+          @conn.ack @msg.headers["message-id"]
+          @conn.publish "/topic/post.index.update", @msg.body, @msg.headers
+        rescue Stomp::Error::MessageIDRequiredError
+          next
+        end
       puts  "updated solr index for #{@msg.headers["pid"]}\n"
       begin
         @conn.ack @msg.headers["message-id"]
       rescue Stomp::Error::MessageIDRequiredError
-        next
-      rescue ActiveFedora::ObjectNotFoundError
-        puts "Object Not Found Error"
         next
       end
   end
