@@ -105,11 +105,12 @@ begin
         puts "Invalid Fedora Request"
         next
       rescue ActiveFedora::ObjectNotFoundError
-          @conn.ack @msg.headers["message-id"]
-          @conn.publish "/topic/post.index.update", @msg.body, @msg.headers
-        rescue Stomp::Error::MessageIDRequiredError
-          next
-        end
+        puts "Object Not Found Error"
+        next
+      rescue Stomp::Error::MessageIDRequiredError
+        puts "Message ID Required Error"
+        next
+      end
       puts  "updated solr index for #{@msg.headers["pid"]}\n"
       begin
         @conn.ack @msg.headers["message-id"]
