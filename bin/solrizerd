@@ -52,7 +52,7 @@ end
 options = {
   :multiple=>false,
   :dir_mode=>:normal,
-  :dir=>'/home/hydradm/tufts-great-courses/log',
+  :dir=>'/home/hydradm/tufts-image-library/log',
   :log_output => true,
   :backtrace=>true
 }
