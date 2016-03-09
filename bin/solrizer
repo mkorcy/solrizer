@@ -97,7 +97,8 @@ begin
         else
           $stderr.puts "Unknown Method: #{method}"
         end
-
+        rescue NoMethodError
+          next
         rescue ActiveFedora::ObjectNotFoundError
           @conn.ack @msg.headers["message-id"]
           @conn.publish "/topic/post.index.update", @msg.body, @msg.headers
